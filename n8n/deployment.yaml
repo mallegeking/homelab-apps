@@ -32,8 +32,8 @@ spec:
               value: "5678"
             - name: N8N_PROTOCOL
               value: "https"
-            - name: WEBHOOK_URL
-              value: "http://n8n.mallaegeking.org/"
+            - name: N8N_WEBHOOK_URL
+              value: "https://n8n.mallaegeking.org/"
             - name: N8N_PROXY_HOPS
               value: "1"
             - name: GENERIC_TIMEZONE
