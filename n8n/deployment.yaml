@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: n8n
+  namespace: n8n
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: n8n
+  template:
+    metadata:
+      labels:
+        app: n8n
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: n8n
+          image: docker.io/n8nio/n8n:latest
+          ports:
+            - containerPort: 5678
+          env:
+            - name: N8N_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: n8n-secrets
+                  key: N8N_ENCRYPTION_KEY
+            - name: N8N_HOST
+              value: "n8n.192.168.178.134.nip.io"
+            - name: N8N_PORT
+              value: "5678"
+            - name: N8N_PROTOCOL
+              value: "http"
+            - name: WEBHOOK_URL
+              value: "http://n8n.192.168.178.134.nip.io/"
+            - name: N8N_PROXY_HOPS
+              value: "1"
+            - name: GENERIC_TIMEZONE
+              value: "Europe/Berlin"
+            - name: TZ
+              value: "Europe/Berlin"
+          volumeMounts:
+            - name: data
+              mountPath: /home/node/.n8n
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: n8n-data
