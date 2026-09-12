@@ -1,0 +1,39 @@
+# Redirects any plain-HTTP request on this router to HTTPS, so the Argo CD
+# login page is never served in cleartext on the LAN.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: redirect-https
+  namespace: argocd
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: argocd-server
+  namespace: argocd
+  annotations:
+    # <namespace>-<middleware name>@kubernetescrd is Traefik's naming scheme for
+    # a Middleware defined as a Kubernetes CRD.
+    traefik.ingress.kubernetes.io/router.middlewares: argocd-redirect-https@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: argocd.internal
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: argocd-server
+                port:
+                  number: 80
+  # No secretName: Traefik serves its own default self-signed certificate.
+  # Present only so Traefik opens an HTTPS router for this host at all.
+  tls:
+    - hosts:
+        - argocd.internal
