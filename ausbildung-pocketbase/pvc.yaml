@@ -1,0 +1,16 @@
+# PocketBase data for the ausbildung pipeline: postings, employers, matches, runs.
+# local-path deletes the data when this PVC is deleted (reclaim policy Delete),
+# so Argo CD must never prune it, even if this file is removed from Git.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pocketbase-data
+  namespace: ausbildung
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi

@@ -1,0 +1,40 @@
+# The PocketBase admin UI on the LAN only, as ausbildung.internal (Pi-hole record).
+# Same pattern as argocd.internal: plain HTTP is redirected to HTTPS, and Traefik
+# serves its default self-signed certificate. Never behind a Cloudflare Tunnel:
+# the database holds contact persons' names, emails and phone numbers.
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: redirect-https
+  namespace: ausbildung
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pocketbase
+  namespace: ausbildung
+  annotations:
+    # <namespace>-<middleware name>@kubernetescrd is Traefik's naming scheme for
+    # a Middleware defined as a Kubernetes CRD.
+    traefik.ingress.kubernetes.io/router.middlewares: ausbildung-redirect-https@kubernetescrd
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: ausbildung.internal
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: pocketbase
+                port:
+                  number: 8090
+  # No secretName: Traefik serves its own default self-signed certificate.
+  tls:
+    - hosts:
+        - ausbildung.internal

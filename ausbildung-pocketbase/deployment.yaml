@@ -1,0 +1,70 @@
+# PocketBase 0.40.6 for the ausbildung pipeline. Image built from the pinned GitHub
+# release (checksum checked) in the ausbildung-pipeline repo, pocketbase/Dockerfile.
+# The superuser is created or updated at start from the pocketbase-superuser Secret,
+# created by hand: PB_SUPERUSER_EMAIL, PB_SUPERUSER_PASSWORD.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pocketbase
+  namespace: ausbildung
+spec:
+  replicas: 1
+  # SQLite: never two pods on the same data, not even during an update.
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: pocketbase
+  template:
+    metadata:
+      labels:
+        app: pocketbase
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+      containers:
+        - name: pocketbase
+          image: ghcr.io/mallegeking/ausbildung-pocketbase:0.40.6
+          ports:
+            - containerPort: 8090
+          env:
+            - name: TZ
+              value: Europe/Berlin
+            - name: PB_SUPERUSER_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: pocketbase-superuser
+                  key: PB_SUPERUSER_EMAIL
+            - name: PB_SUPERUSER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pocketbase-superuser
+                  key: PB_SUPERUSER_PASSWORD
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 8090
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 8090
+            initialDelaySeconds: 15
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+          volumeMounts:
+            - name: data
+              mountPath: /pb_data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: pocketbase-data

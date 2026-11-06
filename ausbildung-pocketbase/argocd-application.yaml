@@ -1,0 +1,23 @@
+# Argo CD Application for the ausbildung pipeline's PocketBase. Applied once by hand
+# on the controller: kubectl apply -f ausbildung-pocketbase/argocd-application.yaml
+# Excluded from its own sync. The PVC carries Prune=false, see pvc.yaml.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ausbildung-pocketbase
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/mallegeking/homelab-apps.git
+    targetRevision: main
+    path: ausbildung-pocketbase
+    directory:
+      exclude: argocd-application.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ausbildung
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
