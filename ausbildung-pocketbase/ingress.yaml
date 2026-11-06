@@ -1,4 +1,6 @@
-# The PocketBase admin UI on the LAN only, as ausbildung.internal (Pi-hole record).
+# The PocketBase admin UI on the LAN only, as pb.ausbildung.internal (Pi-hole record).
+# Since UI 1 the review app has ausbildung.internal, the admin UI is the technical back door.
+# The redirect-https middleware below is also used by the review app's Ingress.
 # Same pattern as argocd.internal: plain HTTP is redirected to HTTPS, and Traefik
 # serves its default self-signed certificate. Never behind a Cloudflare Tunnel:
 # the database holds contact persons' names, emails and phone numbers.
@@ -24,7 +26,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-    - host: ausbildung.internal
+    - host: pb.ausbildung.internal
       http:
         paths:
           - path: /
@@ -37,4 +39,4 @@ spec:
   # No secretName: Traefik serves its own default self-signed certificate.
   tls:
     - hosts:
-        - ausbildung.internal
+        - pb.ausbildung.internal
