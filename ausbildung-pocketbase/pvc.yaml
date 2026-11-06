@@ -1,13 +1,15 @@
 # PocketBase data for the ausbildung pipeline: postings, employers, matches, runs.
-# local-path deletes the data when this PVC is deleted (reclaim policy Delete),
-# so Argo CD must never prune it, even if this file is removed from Git.
+# local-path deletes the data when this PVC is deleted (reclaim policy Delete).
+# Prune=false: Argo CD never prunes it, even if this file is removed from Git.
+# Delete=false: deleting the Argo CD Application leaves it in place too.
+# Deleting it by hand with kubectl still wipes the database. Back up first.
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: pocketbase-data
   namespace: ausbildung
   annotations:
-    argocd.argoproj.io/sync-options: Prune=false
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
 spec:
   accessModes:
     - ReadWriteOnce
