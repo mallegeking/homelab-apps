@@ -44,17 +44,24 @@ spec:
                 secretKeyRef:
                   name: pocketbase-superuser
                   key: PB_SUPERUSER_PASSWORD
+          # The nightly ingest writes about 11,000 records in a burst. On k3s-node-1 the health
+          # answer then takes longer than the 1s default, and three misses restarted PocketBase
+          # in the middle of the 7 and 8 Nov runs. 5s per check, and 5 minutes of misses before
+          # a restart: a slow PocketBase is better than one killed mid-write.
           readinessProbe:
             httpGet:
               path: /api/health
               port: 8090
             periodSeconds: 10
+            timeoutSeconds: 5
           livenessProbe:
             httpGet:
               path: /api/health
               port: 8090
             initialDelaySeconds: 15
             periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 10
           resources:
             requests:
               cpu: 50m
